@@ -1,0 +1,89 @@
+#!/usr/bin/env ruby
+#
+# Generate YAML stub files based on given json.
+#
+# Example usage:
+# curl "https://api.eyeem.com/v2/users/vishna?client_id=XwOELOXpiSI0aFJjOwJMyy9fcjSsLx6i" | ./json2yaml.rb
+
+require 'rubygems'
+require 'json'
+require 'active_support/inflector'
+require 'yaml'
+require 'optparse'
+
+module Generator
+    $classes = {}
+
+    def Generator.parse(json, name)
+        members ||= Generator.get_class(name)
+        json.keys.each do |key|
+            case json[key].class.to_s
+
+                when "Hash"
+                members[key] = key
+                Generator.parse(json[key], key)
+
+                when "Fixnum", "String", "TrueClass", "FalseClass", "Float"
+                members[key] = json[key].class.to_s
+
+                when "Array"
+                next unless json[key].length > 0
+                if json[key].first.kind_of? Hash
+                    value = key.singularize
+                    value = name.singularize if (OPTIONS[:containers].include?(key))
+                    value = OPTIONS[:alias][value] || value
+                    members[key] = {"Array" => value}
+                    Generator.parse(json[key].first, value)
+                elsif ["Fixnum", "String", "TrueClass", "FalseClass", "Float"].include? json[key].first.class.to_s
+                    members[key] = {"Array" => json[key].first.class.to_s}
+                end
+
+                when "NilClass"
+
+                else
+                puts "Upss!!1 #{json[key].class.to_s}"
+
+            end
+        end
+        # puts @members
+    end
+
+    def Generator.get_class(name)
+        return {} if name.nil?
+        $classes[name] ||= {}
+    end
+
+    def Generator.analyze(json, base_class="data")
+        if json.kind_of? Array
+            json.each do |element|
+                Generator.parse(element, base_class)
+            end
+        elsif
+            Generator.parse(json, base_class)
+        end
+        return $classes
+    end
+end
+
+# argument options
+OPTIONS = {}
+OPTIONS[:alias] = {}
+OPTIONS[:containers] = []
+OptionParser.new do |opts|
+  opts.banner = "curl \"https://api.eyeem.com/v2/users/vishna?client_id=XwOELOXpiSI0aFJjOwJMyy9fcjSsLx6i\" | ./json2yaml.rb"
+
+  opts.on('-b', '--baseclass NAME', 'Name for the base class') { |v| OPTIONS[:base_class] = v }
+  opts.on('-c', '--container NAME', 'Comma separated nodes that contain array and shouldn\'t be treated as a separate class') { |v| OPTIONS[:containers] += v.split(",") }
+  opts.on('-a', '--alias ALIAS_CLASS=CLASS', 'Prevents creation of alike classes') { |v|
+    arr = v.split "="
+    OPTIONS[:alias][arr[0]] = arr[1]
+  }
+
+end.parse!
+
+# process STDIN
+result = JSON.parse(STDIN.read)
+classes = Generator.analyze(result, OPTIONS[:base_class])
+
+# print out YAML FILE
+puts classes.to_yaml

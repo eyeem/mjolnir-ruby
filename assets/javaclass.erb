@@ -1,0 +1,59 @@
+// generated file, do not edit!
+
+package <%= @package %>;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+<% @members.jimportmixins.each do |name, value| %>
+import <%= value['ImportMixin'] %>;
+<% end %>
+
+public final class <%= @classname.camelize %> implements Serializable {
+   // serializable
+   private static final long serialVersionUID = -2800020519567815353L;
+
+   // members
+<% @members.jmembers.each do |name, type| %>
+   public <%= jtype(type) %> <%= jmember(name) %>;
+<% end %>
+
+   // ctor
+   public <%= @classname.camelize %>() {
+      // default
+   }
+
+   public <%= @classname.camelize %>(JSONObject json) {
+      <% @members.jmembers.each do |name, type| %>
+         <%= jmember(name) %> = <%= jctor(name) %>;
+      <% end %>
+      <% @members.jctormixins.each do |name, value| %>
+         // mixin: <%= name %>;
+         <%= value['CtorMixin'] %>
+      <% end %>
+   }
+
+<% @members.jmixins.each do |name, value| %>
+   // mixin: <%= name %>;
+   <%= value['Mixin'] %>
+<% end %>
+
+   // static methods
+   public static ArrayList<<%= @classname.camelize %>> fromJSONArray(JSONArray array) {
+      ArrayList<<%= @classname.camelize %>> result = new ArrayList<<%= @classname.camelize %>>();
+      if (array == null || array.length() < 1)
+         return result;
+
+      int n = array.length();
+      for (int i=0; i<n; i++) {
+         JSONObject obj = array.optJSONObject(i);
+         if (null != obj) {
+            result.add(new <%= @classname.camelize %>(obj));
+         }
+      }
+      return result;
+   }
+}

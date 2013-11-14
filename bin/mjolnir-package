@@ -1,0 +1,165 @@
+#!/usr/bin/env ruby
+#
+# Generate Java model files given YAML input
+#
+# usage yaml2java.rb foursquare.yaml com.timelord.foursquare /path/to/dir
+
+require 'rubygems'
+require 'active_support/inflector'
+require 'yaml'
+require 'erb'
+require 'optparse'
+
+class Hash
+    def jmembers
+        res = {}
+        self.each do |key, value|
+            res[key] = value if (!value["Array"].nil? || value.kind_of?(String))
+        end
+        return res
+    end
+
+    def jimportmixins
+        res = {}
+        self.each do |key, value|
+            res[key] = value if !value["ImportMixin"].nil?
+        end
+        return res
+    end
+
+    def jmixins
+        res = {}
+        self.each do |key, value|
+            res[key] = value if !value["Mixin"].nil?
+        end
+        return res
+    end
+
+    def jctormixins
+        res = {}
+        self.each do |key, value|
+            res[key] = value if !value["CtorMixin"].nil?
+        end
+        return res
+    end
+end
+
+class JavaClass
+    #@@erb_file = File.read(File.expand_path(File.join(File.dirname(__FILE__), 'javaclass.erb')))
+    @@erb_file = File.read(File.expand_path(File.join(File.dirname(__FILE__), '../assets/javaclass.erb')))
+
+    def initialize(package, classname, members)
+        @classname = classname
+        @members = members
+        @package = package
+    end
+
+    ## HELPER METHODS
+
+    def jtype(type)
+        case type
+        when "String"
+            "String"
+        when "FalseClass", "TrueClass"
+            "boolean"
+        when "Float"
+            "double"
+        when "Fixnum"
+            "long"
+        when "Date"
+            "long"
+
+        else
+            if type.kind_of? Hash
+                "ArrayList<#{jtype(type["Array"]).camelize}>"
+            else
+                type.camelize
+            end
+        end
+    end
+
+    def jmember(member)
+        case member
+        when "protected"
+            "protected_"
+        else
+            member
+        end
+    end
+
+    def jctor(member)
+        type = @members[member]
+        case type
+            when "String"
+            "json.optString(\"#{member}\", \"\")"
+            when "FalseClass", "TrueClass"
+            "json.optBoolean(\"#{member}\", false)"
+            when "Float"
+            "json.optDouble(\"#{member}\", Double.NaN)"
+            when "Fixnum"
+            "json.optLong(\"#{member}\", 0)"
+            when "Date"
+            "com.eyeem.mjolnir.DateParser.toMilliseconds(\"#{@package}\", json.optString(\"#{member}\", \"\"))"
+            else
+            if type.kind_of? Hash
+                jarray_ctor(type, member)
+            else
+                "json.isNull(\"#{member}\") ? null : new #{type.camelize}(json.optJSONObject(\"#{member}\"))"
+            end
+        end
+    end
+    
+    def jarray_ctor(type, member)
+        innertype = type["Array"]
+        case innertype
+            when "String", "FalseClass", "TrueClass", "Float", "Fixnum"
+            # TODO don't generate this loop code, move it to utulity method
+            "new ArrayList<#{jtype(innertype).camelize}>();\n\
+            {\n\
+               JSONArray a = json.optJSONArray(\"#{member}\");\n\
+               for (int i=0; a != null && i<a.length(); i++){\n\
+                  #{jmember(member)}.add(a.opt#{jtype(innertype).camelize}(i));\n\
+               }\n\
+            }"
+            else
+            "#{innertype.camelize}.fromJSONArray(json.optJSONArray(\"#{member}\"));"
+        end
+    end
+
+    def java_code
+        template = ERB.new(@@erb_file)
+        template.result(binding)
+    end
+
+    def filename
+        "#{@classname.camelize}.java"
+    end
+
+end
+
+# argument options
+OPTIONS = {}
+OptionParser.new do |opts|
+  opts.banner = "curl \"https://api.eyeem.com/v2/users/vishna?client_id=XwOELOXpiSI0aFJjOwJMyy9fcjSsLx6i\" | ./json2yaml.rb"
+
+  opts.on('-p', '--packagename NAME', 'Java package name for the generated classes') { |v| OPTIONS[:package_name] = v }
+  opts.on('-y', '--yaml FILENAME', 'YAML file containing definitions') { |v| OPTIONS[:yaml] = v }
+  opts.on('-o', '--output OUTPUT_DIR', 'Output directory for generated classes') { |v| OPTIONS[:output_dir] = v }
+
+end.parse!
+
+yaml_model = YAML::load(File.open(OPTIONS[:yaml]))
+package = OPTIONS[:package_name]
+path = OPTIONS[:output_dir]
+
+Dir.mkdir(path) unless File.exists?(path)
+Dir.chdir(path)
+package.split(".").each do |fragment|
+    Dir.mkdir(fragment) unless File.exists?(fragment)
+    Dir.chdir(fragment)
+end
+puts Dir.pwd
+yaml_model.each do |k, v|
+    jc = JavaClass.new(package, k, v)
+    File.open(jc.filename, 'w') {|f| f.write(jc.java_code) }
+end
