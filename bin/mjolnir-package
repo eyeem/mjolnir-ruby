@@ -108,7 +108,24 @@ class JavaClass
             end
         end
     end
-    
+
+    def jdector(member)
+        type = @members[member]
+        dector = ""
+        case member
+        when "protected"
+            dector = "protected_"
+        else
+            decetor = member
+        end
+        if type.kind_of? Hash
+            innertype = type["Array"].camelize
+            innertype + ".toJSONArray(" + decetor + ")"
+        else
+            decetor
+        end
+    end
+
     def jarray_ctor(type, member)
         innertype = type["Array"]
         case innertype

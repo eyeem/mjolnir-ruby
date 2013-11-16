@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 <% @members.jimportmixins.each do |name, value| %>
@@ -34,6 +35,24 @@ public final class <%= @classname.camelize %> implements Serializable {
          // mixin: <%= name %>;
          <%= value['CtorMixin'] %>
       <% end %>
+   }
+
+   public JSONObject toJSON() {
+      JSONObject json = new JSONObject();
+      try {
+      <% @members.jmembers.each do |name, type| %>
+         json.put("<%=name%>", <%= jdector(name) %>);
+      <% end %>
+      } catch (JSONException e) {}
+      return json;
+   }
+
+   public static JSONArray toJSONArray(ArrayList<<%= @classname.camelize %>> items) {
+      JSONArray array = new JSONArray();
+      for (<%= @classname.camelize %> item : items) {
+         array.put(item.toJSON());
+      }
+      return array;
    }
 
 <% @members.jmixins.each do |name, value| %>
