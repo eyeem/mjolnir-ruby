@@ -56,4 +56,8 @@ public final class <%= @classname.camelize %> implements Serializable {
       }
       return result;
    }
+
+   public static <%= @classname.camelize %> fromJSON(JSONObject json) {
+      return new <%= @classname.camelize %>(json);
+   }
 }
