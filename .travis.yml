@@ -1,4 +1,10 @@
+language: ruby
 before_install: gem install bundler --pre
-
+notifications:
+  email: false
 rvm:
   - 2.0.0
+
+after_script:
+- './bin/mjolnir-package --yaml test/test.yaml --output output/ --package test.mjolnir'
+- 'cat output/test/mjolnir/Auth.java'
