@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/eyeem/mjolnir-ruby.png)](https://travis-ci.org/eyeem/mjolnir-ruby)
+
 mjolnir-ruby
 ============
 
