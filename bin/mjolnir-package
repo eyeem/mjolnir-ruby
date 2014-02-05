@@ -120,7 +120,12 @@ class JavaClass
         end
         if type.kind_of? Hash
             innertype = type["Array"].camelize
-            innertype + ".toJSONArray(" + decetor + ")"
+            case innertype
+                when "String", "FalseClass", "TrueClass", "Float", "Fixnum"
+                    "new JSONArray(#{decetor})"
+                else
+                    innertype + ".toJSONArray(#{decetor})"
+            end
         else
             decetor
         end
