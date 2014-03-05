@@ -97,7 +97,7 @@ class JavaClass
             when "Float"
             "json.optDouble(\"#{member}\", Double.NaN)"
             when "Fixnum"
-            "json.optLong(\"#{member}\", 0)"
+            "json.optLong(\"#{member}\", Long.MIN_VALUE)"
             when "Date"
             "com.eyeem.mjolnir.DateParser.toMilliseconds(\"#{@package}\", json.optString(\"#{member}\", \"\"))"
             else
