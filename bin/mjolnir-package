@@ -131,7 +131,7 @@ class JavaClass
                 when "String", "FalseClass", "TrueClass", "Float", "Fixnum", "Date"
                     decetor
                 else
-                    "#{decetor}.toJSON()"
+                    "#{decetor} != null ? #{decetor}.toJSON() : null"
             end
         end
     end
