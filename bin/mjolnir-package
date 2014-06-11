@@ -91,7 +91,7 @@ class JavaClass
         type = @members[member]
         case type
             when "String"
-            "json.optString(\"#{member}\", \"\")"
+            "json.isNull(\"#{member}\") ? \"\" : json.optString(\"#{member}\", \"\")"
             when "FalseClass", "TrueClass"
             "json.optBoolean(\"#{member}\", false)"
             when "Float"
