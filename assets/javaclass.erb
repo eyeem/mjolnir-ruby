@@ -49,7 +49,7 @@ public final class <%= @classname.camelize %> implements Serializable {
 
    public static JSONArray toJSONArray(ArrayList<<%= @classname.camelize %>> items) {
       JSONArray array = new JSONArray();
-      for (<%= @classname.camelize %> item : items) {
+      if (items != null) for (<%= @classname.camelize %> item : items) {
          array.put(item.toJSON());
       }
       return array;

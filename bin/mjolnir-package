@@ -128,8 +128,10 @@ class JavaClass
             end
         else
             case type
-                when "String", "FalseClass", "TrueClass", "Float", "Fixnum", "Date"
+                when "String", "FalseClass", "TrueClass", "Fixnum", "Date"
                     decetor
+                when "Float"
+                    "Double.isNaN(#{decetor}) ? null : #{decetor}"
                 else
                     "#{decetor} != null ? #{decetor}.toJSON() : null"
             end
