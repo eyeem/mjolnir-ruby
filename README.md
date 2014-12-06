@@ -9,7 +9,7 @@ Installation
 ============
 
 ```
-gem build mjolnir.gemspec && sudo gem install ./mjolnir-0.1.0.gems
+gem build mjolnir.gemspec && sudo gem install ./mjolnir-0.1.0.gem
 ```
 
 Working with mjolnir
