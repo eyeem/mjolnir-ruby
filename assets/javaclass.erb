@@ -29,7 +29,7 @@ public final class <%= @classname.camelize %> implements Serializable {
 
    public <%= @classname.camelize %>(JSONObject json) {
       <% @members.jmembers.each do |name, type| %>
-         <%= jmember(name) %> = <%= jctor(name) %>;
+         try { <%= jmember(name) %> = <%= jctor(name) %>; } catch (Exception e) {}
       <% end %>
       <% @members.jctormixins.each do |name, value| %>
          // mixin: <%= name %>;
