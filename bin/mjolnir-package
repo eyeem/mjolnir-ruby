@@ -82,6 +82,8 @@ class JavaClass
         case member
         when "protected"
             "protected_"
+        when "default"
+            "default_"
         else
             member
         end
@@ -115,6 +117,8 @@ class JavaClass
         case member
         when "protected"
             dector = "protected_"
+        when "default"
+            decetor = "default_"
         else
             decetor = member
         end
