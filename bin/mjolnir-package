@@ -84,6 +84,8 @@ class JavaClass
             "protected_"
         when "default"
             "default_"
+        when "new"
+            "new_"
         else
             member
         end
@@ -119,6 +121,8 @@ class JavaClass
             dector = "protected_"
         when "default"
             decetor = "default_"
+        when "new"
+            decetor = "new_"
         else
             decetor = member
         end
