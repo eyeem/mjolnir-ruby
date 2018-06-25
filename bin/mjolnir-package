@@ -80,6 +80,8 @@ class JavaClass
 
     def jmember(member)
         case member
+        when "do"
+            "do_"
         when "protected"
             "protected_"
         when "default"
@@ -123,6 +125,8 @@ class JavaClass
             decetor = "default_"
         when "new"
             decetor = "new_"
+        when "do"
+            decetor = "do_"
         else
             decetor = member
         end
